@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cityscape Line Art Animation</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background: #1d1f21;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #startText {
+            color: #33ff33; /* Neon green text */
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 2rem;
+            text-align: center;
+            text-shadow: 0 0 10px #33ff33, 0 0 20px #33ff33;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="cityCanvas"></canvas>
+    <div id="startText">CLICK TO START</div>
+    <audio id="audio" src="odoia.mp3" preload="auto" style="display: none;"></audio>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+            const canvas = document.getElementById('cityCanvas');
+            const ctx = canvas.getContext('2d');
+            const startText = document.getElementById('startText');
+            const audio = document.getElementById('audio');
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const analyser = audioCtx.createAnalyser();
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Connect audio to the analyser
+            const source = audioCtx.createMediaElementSource(audio);
+            source.connect(analyser);
+            analyser.connect(audioCtx.destination);
+            analyser.fftSize = 256;
+
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Get frequency data
+                analyser.getByteFrequencyData(dataArray);
+
+                const buildingWidth = canvas.width / bufferLength * 0.8;
+                for (let i = 0; i < bufferLength; i++) {
+                    const buildingHeight = dataArray[i] * 2;
+                    const x = i * (canvas.width / bufferLength);
+                    const y = canvas.height - buildingHeight;
+
+                    // Draw gradient building
+                    const gradient = ctx.createLinearGradient(0, y, 0, canvas.height);
+                    gradient.addColorStop(0, `rgba(${dataArray[i]}, 255, 100, 0.7)`);
+                    gradient.addColorStop(1, 'rgba(0, 50, 100, 0.5)');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(x, y, buildingWidth, buildingHeight);
+                }
+
+                requestAnimationFrame(draw);
+            }
+
+            document.body.addEventListener('click', function () {
+                audio.play().then(() => {
+                    audioCtx.resume();
+                    draw();
+                    startText.style.display = 'none'; // Hide the start text
+                }).catch(err => console.error('Audio playback failed:', err));
+                this.removeEventListener('click', arguments.callee);
+            });
+
+            console.log("Click anywhere to start the cityscape animation with music!");
+        });
+    </script>
+</body>
+</html>

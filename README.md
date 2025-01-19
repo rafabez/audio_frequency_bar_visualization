@@ -10,7 +10,7 @@
 - Customizable: Easily replace the default audio file with your own.
 
 ## Demo
-[Live Demo](#) *(Add your deployment link here)*
+[Live Demo](https://rafabeznos.com.br/fx/sound/soundviz/audio_frequency_bar_viz.html)
 
 ## Usage
 1. Clone the repository:
